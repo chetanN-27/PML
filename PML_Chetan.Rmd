@@ -1,0 +1,107 @@
+---
+title: "Peer Graded ML"
+author: "Chetan"
+date: "10/21/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+Week 4 PML project 
+```{r}
+library(caret)
+library(knitr)
+
+library(data.table)
+library(rpart.plot)
+library(rpart)
+
+library(gbm)
+library(ggplot2)
+
+library(corrplot)
+
+```
+cleaning and then exploring the data. 
+
+```{r}
+Url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+tra  <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+
+test <- read.csv(url(Url))
+dtra <- read.csv(url(tra))
+
+
+```
+ cleaning the input of the data
+
+```{r}
+train_data <- dtra[, colSums(is.na(dtra)) == 0]
+testing_data <- test[, colSums(is.na(test)) == 0]
+```
+ we will consider seventy percentage of the data for the training set and rest of the thirty percentage of the data for the testing data set
+
+```{r}
+train_data <- train_data[, -c(1:7)]
+testing_data <- testing_data[, -c(1:7)]
+dim(train_data)
+```
+
+```{r}
+set.seed(1234)
+dtraining <- createDataPartition(dtra$classe, p = 0.7, list = FALSE)
+train_data <- train_data[dtraining, ]
+testing_data <- train_data[-dtraining, ]
+dim(train_data)
+dim(testing_data)
+```
+removing the variables that are non zero .
+```{r}
+nZero <- nearZeroVar(train_data)
+train_data <- train_data[, -nZero]
+testing_data <- testing_data[, -nZero]
+dim(train_data)
+dim(testing_data)
+```
+
+
+```{r}
+plot_cor <- cor(train_data[, -53])
+corrplot(plot_cor, order = "FPC", method = "color", type = "upper", tl.cex = 0.8, tl.col = rgb(0, 0, 0))
+```
+
+Algorithms used:
+trees and random forests 
+n
+```{r}
+set.seed(20000)
+tredec <- rpart(classe ~ ., data=train_data, method = "class")
+rpart.plot(tredec)
+```
+
+ we will be validate the model 
+```{r}
+modelpre <- predict(tredec, testing_data, type = "class")
+ab <- confusionMatrix(modelpre, testing_data$classe)
+ab
+```
+
+```{r}
+plot(modelpre)
+```
+
+
+```{r}
+set.seed(10000)
+ctr_gbm <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
+valid_gbm <- train(classe ~ .,data=train_data, method = "gbm", trControl = ctr_gbm, verbose = FALSE)
+valid_gbm$finalModel
+```
+
+
+So finally i was able to do this project with the help of the videos i watched on coursera.
+Basically we predicted how many did the exercise and the order in which they did it.
+Thankyou
+
+
+
